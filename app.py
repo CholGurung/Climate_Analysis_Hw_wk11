@@ -94,7 +94,8 @@ def calculate_temp_range(start,end):
                                      func.max(Measurement.tobs),\
                                      func.avg(Measurement.tobs)).\
                                      filter(Measurement.date >= start).\
-                                     filter(Measurement.date <= end).first()
+                                     filter(Measurement.date <= end).all()
+    print("its here ")
     #create dictionary from result
     temperature_dict1 = {"TMIN": temp_range_query[0], "TMAX": temp_range_query[1],\
                          "TAVG": temp_range_query[2]}
