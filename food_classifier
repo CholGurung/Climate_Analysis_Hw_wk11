@@ -1,0 +1,189 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "name": "Untitled2.ipynb",
+      "version": "0.3.2",
+      "provenance": [],
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python2",
+      "display_name": "Python 2"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/CholGurung/Climate_Analysis_Hw_wk11/blob/master/food_classifier\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "metadata": {
+        "id": "gNv43o5M-XRm",
+        "colab_type": "code",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 241
+        },
+        "outputId": "702bfce2-ec60-4f75-fd43-2e1a81b0b6a9"
+      },
+      "cell_type": "code",
+      "source": [
+        "!pip install pyspark"
+      ],
+      "execution_count": 2,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "Collecting pyspark\n",
+            "\u001b[?25l  Downloading https://files.pythonhosted.org/packages/88/01/a37e827c2d80c6a754e40e99b9826d978b55254cc6c6672b5b08f2e18a7f/pyspark-2.4.0.tar.gz (213.4MB)\n",
+            "\u001b[K    100% |████████████████████████████████| 213.4MB 102kB/s \n",
+            "\u001b[?25hCollecting py4j==0.10.7 (from pyspark)\n",
+            "\u001b[?25l  Downloading https://files.pythonhosted.org/packages/e3/53/c737818eb9a7dc32a7cd4f1396e787bd94200c3997c72c1dbe028587bd76/py4j-0.10.7-py2.py3-none-any.whl (197kB)\n",
+            "\u001b[K    100% |████████████████████████████████| 204kB 14.1MB/s \n",
+            "\u001b[?25hBuilding wheels for collected packages: pyspark\n",
+            "  Running setup.py bdist_wheel for pyspark ... \u001b[?25l-\b \b\\\b \b|\b \b/\b \b-\b \b\\\b \b|\b \b/\b \b-\b \b\\\b \b|\b \b/\b \b-\b \b\\\b \b|\b \b/\b \b-\b \b\\\b \b|\b \b/\b \b-\b \b\\\b \b|\b \b/\b \b-\b \b\\\b \b|\b \b/\b \b-\b \b\\\b \b|\b \b/\b \b-\b \b\\\b \b|\b \b/\b \b-\b \b\\\b \b|\b \b/\b \b-\b \b\\\b \b|\b \b/\b \b-\b \b\\\b \b|\b \b/\b \b-\b \b\\\b \b|\b \b/\b \b-\b \b\\\b \b|\b \b/\b \b-\b \b\\\b \b|\b \b/\b \b-\b \b\\\b \b|\b \bdone\n",
+            "\u001b[?25h  Stored in directory: /root/.cache/pip/wheels/cd/54/c2/abfcc942eddeaa7101228ebd6127a30dbdf903c72db4235b23\n",
+            "Successfully built pyspark\n",
+            "Installing collected packages: py4j, pyspark\n",
+            "Successfully installed py4j-0.10.7 pyspark-2.4.0\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "id": "mmUby2ZWAdQt",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "cell_type": "code",
+      "source": [
+        "from pyspark.sql import SparkSession\n",
+        "from pyspark.ml.feature import Tokenizer, StopWordsRemover"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "metadata": {
+        "id": "2-iHs7UoAbzt",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "cell_type": "code",
+      "source": [
+        ""
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "metadata": {
+        "id": "YXPJtqjs-drN",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "cell_type": "code",
+      "source": [
+        "# create spark app and session\n",
+        "spark = SparkSession.builder.appName('nlp').getOrCreate()"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "metadata": {
+        "id": "o1ABtqHk-fAk",
+        "colab_type": "code",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 479
+        },
+        "outputId": "4084b026-3c0f-49b0-f71a-4ebe193635de"
+      },
+      "cell_type": "code",
+      "source": [
+        "# Import csv into a dataframe\n",
+        "from pyspark import SparkFiles\n",
+        "url =\"http://vam.wfp.org/sites/data/WFPVAM_FoodPrices.csv\"\n",
+        "spark.sparkContext.addFile(url)\n",
+        "df = spark.read.csv(SparkFiles.get(\"WFPVAM_FoodPrices.csv\"), header=True, inferSchema=True)\n",
+        "df.show()"
+      ],
+      "execution_count": 6,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "+-------+-----------+-------+----------+------+--------+-----+-------+------+--------+-----+-------+-----+-------+--------+-------+--------+------------------+\n",
+            "|adm0_id|  adm0_name|adm1_id| adm1_name|mkt_id|mkt_name|cm_id|cm_name|cur_id|cur_name|pt_id|pt_name|um_id|um_name|mp_month|mp_year|mp_price|mp_commoditysource|\n",
+            "+-------+-----------+-------+----------+------+--------+-----+-------+------+--------+-----+-------+-----+-------+--------+-------+--------+------------------+\n",
+            "|      1|Afghanistan|    272|Badakhshan|   266|Fayzabad|   55|  Bread|    87|     AFN|   15| Retail|    5|     KG|       1|   2014|    50.0|               WFP|\n",
+            "|      1|Afghanistan|    272|Badakhshan|   266|Fayzabad|   55|  Bread|    87|     AFN|   15| Retail|    5|     KG|       2|   2014|    50.0|               WFP|\n",
+            "|      1|Afghanistan|    272|Badakhshan|   266|Fayzabad|   55|  Bread|    87|     AFN|   15| Retail|    5|     KG|       3|   2014|    50.0|               WFP|\n",
+            "|      1|Afghanistan|    272|Badakhshan|   266|Fayzabad|   55|  Bread|    87|     AFN|   15| Retail|    5|     KG|       4|   2014|    50.0|               WFP|\n",
+            "|      1|Afghanistan|    272|Badakhshan|   266|Fayzabad|   55|  Bread|    87|     AFN|   15| Retail|    5|     KG|       5|   2014|    50.0|               WFP|\n",
+            "|      1|Afghanistan|    272|Badakhshan|   266|Fayzabad|   55|  Bread|    87|     AFN|   15| Retail|    5|     KG|       6|   2014|    50.0|               WFP|\n",
+            "|      1|Afghanistan|    272|Badakhshan|   266|Fayzabad|   55|  Bread|    87|     AFN|   15| Retail|    5|     KG|       7|   2014|    50.0|               WFP|\n",
+            "|      1|Afghanistan|    272|Badakhshan|   266|Fayzabad|   55|  Bread|    87|     AFN|   15| Retail|    5|     KG|       8|   2014|    50.0|               WFP|\n",
+            "|      1|Afghanistan|    272|Badakhshan|   266|Fayzabad|   55|  Bread|    87|     AFN|   15| Retail|    5|     KG|       9|   2014|    50.0|               WFP|\n",
+            "|      1|Afghanistan|    272|Badakhshan|   266|Fayzabad|   55|  Bread|    87|     AFN|   15| Retail|    5|     KG|      10|   2014|    50.0|               WFP|\n",
+            "|      1|Afghanistan|    272|Badakhshan|   266|Fayzabad|   55|  Bread|    87|     AFN|   15| Retail|    5|     KG|      11|   2014|    50.0|               WFP|\n",
+            "|      1|Afghanistan|    272|Badakhshan|   266|Fayzabad|   55|  Bread|    87|     AFN|   15| Retail|    5|     KG|      12|   2014|    50.0|               WFP|\n",
+            "|      1|Afghanistan|    272|Badakhshan|   266|Fayzabad|   55|  Bread|    87|     AFN|   15| Retail|    5|     KG|       1|   2015|    50.0|               WFP|\n",
+            "|      1|Afghanistan|    272|Badakhshan|   266|Fayzabad|   55|  Bread|    87|     AFN|   15| Retail|    5|     KG|       2|   2015|    50.0|               WFP|\n",
+            "|      1|Afghanistan|    272|Badakhshan|   266|Fayzabad|   55|  Bread|    87|     AFN|   15| Retail|    5|     KG|       3|   2015|    50.0|               WFP|\n",
+            "|      1|Afghanistan|    272|Badakhshan|   266|Fayzabad|   55|  Bread|    87|     AFN|   15| Retail|    5|     KG|       6|   2015|    50.0|               WFP|\n",
+            "|      1|Afghanistan|    272|Badakhshan|   266|Fayzabad|   55|  Bread|    87|     AFN|   15| Retail|    5|     KG|       7|   2015|    50.0|               WFP|\n",
+            "|      1|Afghanistan|    272|Badakhshan|   266|Fayzabad|   55|  Bread|    87|     AFN|   15| Retail|    5|     KG|       8|   2015|    50.0|               WFP|\n",
+            "|      1|Afghanistan|    272|Badakhshan|   266|Fayzabad|   55|  Bread|    87|     AFN|   15| Retail|    5|     KG|       9|   2015|    50.0|               WFP|\n",
+            "|      1|Afghanistan|    272|Badakhshan|   266|Fayzabad|   55|  Bread|    87|     AFN|   15| Retail|    5|     KG|      10|   2015|   56.25|               WFP|\n",
+            "+-------+-----------+-------+----------+------+--------+-----+-------+------+--------+-----+-------+-----+-------+--------+-------+--------+------------------+\n",
+            "only showing top 20 rows\n",
+            "\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "id": "MnnWB51SFfab",
+        "colab_type": "code",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 164
+        },
+        "outputId": "1f1b0abf-e7c4-4afe-ec64-7cf1ae38cc8f"
+      },
+      "cell_type": "code",
+      "source": [
+        "df.summary()"
+      ],
+      "execution_count": 1,
+      "outputs": [
+        {
+          "output_type": "error",
+          "ename": "NameError",
+          "evalue": "ignored",
+          "traceback": [
+            "\u001b[0;31m\u001b[0m",
+            "\u001b[0;31mNameError\u001b[0mTraceback (most recent call last)",
+            "\u001b[0;32m<ipython-input-1-759307761548>\u001b[0m in \u001b[0;36m<module>\u001b[0;34m()\u001b[0m\n\u001b[0;32m----> 1\u001b[0;31m \u001b[0mdf\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0msummary\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m",
+            "\u001b[0;31mNameError\u001b[0m: name 'df' is not defined"
+          ]
+        }
+      ]
+    }
+  ]
+}
